@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ZAM CHAT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg: #080b14;
+  --surface: #0e1220;
+  --surface2: #141824;
+  --surface3: #1c2235;
+  --accent: #4f8ef7;
+  --accent-glow: rgba(79,142,247,0.2);
+  --accent2: #f7614f;
+  --accent3: #4ff7a0;
+  --accent3-glow: rgba(79,247,160,0.2);
+  --text: #e4e8f5;
+  --text2: #8892aa;
+  --border: #1e2538;
+  --border2: #252d42;
+  --msg-out: #1a2550;
+  --msg-in: #141824;
+  --danger: #f74f4f;
+  --admin-gold: #f7c34f;
+  --font-head: 'Outfit', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ===== SCREENS ===== */
+.screen { display:none; width:100%; height:100vh; flex-direction:column; align-items:center; justify-content:center; position:absolute; top:0; left:0; }
+.screen.active { display:flex; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes msgSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes glow { 0%,100%{box-shadow:0 0 20px rgba(79,142,247,0.1)} 50%{box-shadow:0 0 40px rgba(79,142,247,0.25)} }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes timerCount { from{stroke-dashoffset:0} to{stroke-dashoffset:283} }
+
+/* ===== COMMON CARD ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 28px;
+  width: 340px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  animation: fadeUp 0.4s ease;
+}
+
+.card-title {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+
+.card-sub {
+  font-size: 12px;
+  color: var(--text2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+/* ===== LOGO ===== */
+.logo {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 38px;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, var(--accent) 0%, #8ab4ff 50%, var(--accent3) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+  animation: fadeUp 0.5s ease;
+}
+
+.logo-sub {
+  font-size: 11px;
+  color: var(--text2);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 36px;
+  animation: fadeUp 0.5s ease 0.1s both;
+}
+
+/* ===== INPUT ===== */
+.input-group { margin-bottom: 14px; position:relative; }
+.input-label { font-size: 11px; color: var(--text2); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; display:block; }
+
+input[type="text"], input[type="password"], input[type="email"], textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+input.error { border-color: var(--danger); animation: shake 0.35s ease; }
+
+select {
+  width:100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-head);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent), #7aabff);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(79,142,247,0.3);
+}
+
+.btn-accent:hover { transform:translateY(-1px); box-shadow: 0 8px 28px rgba(79,142,247,0.45); }
+.btn-accent:active { transform:translateY(0); }
+
+.btn-outline {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-danger {
+  background: rgba(247,79,79,0.1);
+  border: 1px solid rgba(247,79,79,0.3);
+  color: var(--danger);
+}
+.btn-danger:hover { background: rgba(247,79,79,0.2); }
+
+.btn-green {
+  background: linear-gradient(135deg, var(--accent3), #3de08a);
+  color: #0a0e18;
+}
+
+.btn-sm {
+  width: auto;
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+/* ===== ERROR MSG ===== */
+.err-msg {
+  color: var(--danger);
+  font-size: 12px;
+  text-align: center;
+  margin-top: 10px;
+  min-height: 16px;
+}
+
+/* ===== DOTS ===== */
+.step-dots { display:flex; gap:8px; margin-bottom:20px; }
+.step-dot { width:24px; height:4px; border-radius:2px; background:var(--border2); transition:all 0.3s; }
+.step-dot.active { background:var(--accent); width:36px; }
+.step-dot.done { background:var(--accent3); }
+
+/* ============================================================
+   SCREEN 1 — SECURITY
+   ============================================================ */
+#s-security {
+  background: radial-gradient(ellipse at 20% 10%, rgba(79,142,247,0.06) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 90%, rgba(79,247,160,0.04) 0%, transparent 60%), var(--bg);
+}
+
+/* ============================================================
+   SCREEN 2 — CHOOSE (Account / New Account)
+   ============================================================ */
+#s-choose { background: var(--bg); }
+
+.choose-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 28px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  animation: fadeUp 0.4s ease;
+}
+
+/* ============================================================
+   SCREEN 3 — SIGNUP
+   ============================================================ */
+#s-signup { background: var(--bg); }
+
+/* ============================================================
+   SCREEN 4 — LOGIN
+   ============================================================ */
+#s-login { background: var(--bg); }
+
+/* ============================================================
+   SCREEN 5 — HOME
+   ============================================================ */
+#s-home {
+  background: var(--bg);
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.app-layout { display:flex; flex-direction:column; width:100%; height:100vh; }
+
+/* top bar */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.top-bar-logo {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--accent), var(--accent3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.top-bar-icons { display:flex; gap:10px; align-items:center; }
+
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex; align-items:center; justify-content:center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text2);
+  font-size: 16px;
+}
+.icon-btn:hover { background:var(--surface3); color:var(--accent); border-color:var(--accent); }
+
+/* home feed */
+.home-feed {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px;
+}
+
+.home-empty-img {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--border2);
+  display: flex; align-items:center; justify-content:center;
+  font-size: 40px;
+  margin-bottom: 4px;
+}
+
+.home-empty-title {
+  font-family: var(--font-head);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.home-empty-count {
+  font-size: 13px;
+  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 4px 14px;
+}
+
+/* friend row in home */
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.friend-row:hover { background: var(--surface2); }
+.friend-row:active { background: var(--surface3); }
+
+.friend-row-info { flex:1; min-width:0; }
+.friend-row-name { font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.friend-row-preview { font-size:12px; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+.friend-row-time { font-size:11px; color:var(--text2); }
+
+/* bottom nav */
+.bottom-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 10px 0 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 6px 18px;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.nav-item .nav-icon { font-size: 20px; transition: transform 0.2s; }
+.nav-item .nav-label { font-size: 9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); font-family:var(--font-head); font-weight:600; }
+.nav-item.active .nav-label { color: var(--accent); }
+.nav-item.active .nav-icon { transform: scale(1.1); }
+
+/* zam chat label pill */
+.zam-pill {
+  background: linear-gradient(135deg, var(--accent), #7aabff);
+  color: #fff;
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.zam-pill.active-nav { background: linear-gradient(135deg, var(--accent), var(--accent3)); box-shadow: 0 2px 12px var(--accent-glow); }
+
+/* ============================================================
+   SCREEN 6 — SEARCH
+   ============================================================ */
+#s-search {
+  background: var(--bg);
+  justify-content: flex-start;
+  padding: 0;
+  align-items: stretch;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.back-btn {
+  width:34px; height:34px;
+  border-radius:10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  font-size:16px;
+  transition: all 0.2s;
+  flex-shrink:0;
+}
+.back-btn:hover { background:var(--surface3); border-color:var(--accent); }
+
+.page-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.search-page-bar {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display:flex; gap:10px;
+}
+
+.search-page-input {
+  flex:1;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 11px 16px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-page-input:focus { border-color: var(--accent); }
+
+.search-go-btn {
+  width:42px; height:42px;
+  border-radius:12px;
+  background: var(--accent);
+  border:none;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  transition: all 0.2s;
+}
+.search-go-btn:hover { background:#6aa3ff; }
+
+.search-results { flex:1; overflow-y:auto; padding:8px 0; }
+
+.search-result-item {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:13px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.search-result-item .s-info { flex:1; }
+.search-result-item .s-name { font-weight:600; font-size:14px; }
+.search-result-item .s-id { font-size:12px; color:var(--text2); }
+
+/* ============================================================
+   SCREEN 7 — CHAT
+   ============================================================ */
+#s-chat {
+  background: var(--bg);
+  justify-content: flex-start;
+  padding: 0;
+  align-items: stretch;
+}
+
+.chat-header {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 18px;
+  border-bottom:1px solid var(--border);
+  background: var(--surface);
+}
+
+.chat-header-info { flex:1; }
+.chat-header-name { font-family:var(--font-head); font-weight:700; font-size:15px; }
+.chat-header-status { font-size:11px; color:var(--accent3); display:flex; align-items:center; gap:4px; margin-top:2px; }
+.status-dot { width:5px; height:5px; border-radius:50%; background:var(--accent3); }
+
+.timer-indicator {
+  display:flex; align-items:center; gap:6px;
+  background: rgba(247,97,79,0.1);
+  border:1px solid rgba(247,97,79,0.3);
+  border-radius:8px;
+  padding:5px 10px;
+  font-size:12px;
+  color:var(--accent2);
+  font-family:var(--font-head);
+  font-weight:600;
+}
+
+.messages-list {
+  flex:1;
+  overflow-y:auto;
+  padding:16px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.msg-row { display:flex; align-items:flex-end; gap:7px; animation: msgSlide 0.2s ease; }
+.msg-row.out { flex-direction:row-reverse; }
+
+.msg-avatar { width:26px; height:26px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; font-family:var(--font-head); }
+
+.msg-bubble {
+  max-width:70%;
+  padding:9px 13px;
+  border-radius:16px;
+  font-size:14px;
+  line-height:1.5;
+  word-break:break-word;
+  position:relative;
+}
+.msg-row.in .msg-bubble { background:var(--msg-in); border:1px solid var(--border); border-bottom-left-radius:4px; }
+.msg-row.out .msg-bubble { background:var(--msg-out); border:1px solid rgba(79,142,247,0.2); border-bottom-right-radius:4px; }
+
+.msg-time {
+  font-size:10px;
+  color:var(--text2);
+  white-space:nowrap;
+  margin-bottom:2px;
+  padding:0 2px;
+}
+
+.msg-disappear-bar {
+  height:2px;
+  background: linear-gradient(90deg, var(--accent2), transparent);
+  border-radius:1px;
+  margin-top:4px;
+  transition: width linear;
+}
+
+.msg-image { max-width:200px; border-radius:10px; display:block; margin-top:4px; }
+
+.voice-msg {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:4px 0;
+}
+.voice-play-btn {
+  width:28px; height:28px;
+  border-radius:50%;
+  background:var(--accent);
+  border:none;
+  color:#fff;
+  font-size:12px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.voice-wave { flex:1; height:20px; display:flex; align-items:center; gap:1px; }
+.voice-wave span { width:2px; border-radius:1px; background:var(--accent); opacity:0.6; }
+
+/* input bar */
+.chat-input-bar {
+  border-top:1px solid var(--border);
+  background:var(--surface);
+  padding:10px 14px;
+}
+
+.chat-input-row {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.chat-msg-input {
+  flex:1;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:22px;
+  padding:10px 16px;
+  color:var(--text);
+  font-size:14px;
+  font-family:var(--font-body);
+  outline:none;
+  resize:none;
+  max-height:100px;
+  transition:border-color 0.2s;
+  line-height:1.4;
+}
+.chat-msg-input:focus { border-color:var(--accent); }
+
+.chat-action-btn {
+  width:38px; height:38px;
+  border-radius:50%;
+  border:1px solid var(--border2);
+  background:var(--surface2);
+  color:var(--text2);
+  font-size:16px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+  flex-shrink:0;
+}
+.chat-action-btn:hover { border-color:var(--accent); color:var(--accent); }
+.chat-action-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.chat-action-btn.recording { background:var(--danger); border-color:var(--danger); color:#fff; animation:pulse 1s infinite; }
+
+.send-btn {
+  width:38px; height:38px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#7aabff);
+  border:none;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  box-shadow:0 4px 14px rgba(79,142,247,0.4);
+  transition:all 0.2s;
+}
+.send-btn:hover { transform:scale(1.08); }
+
+/* save dot */
+.save-dot-row {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:6px 0 2px;
+}
+.save-dot {
+  width:10px; height:10px;
+  border-radius:50%;
+  background:var(--border2);
+  cursor:pointer;
+  transition:all 0.25s;
+  border:none;
+  flex-shrink:0;
+}
+.save-dot.saved { background:var(--accent3); box-shadow:0 0 8px var(--accent3-glow); }
+.save-dot-label { font-size:11px; color:var(--text2); font-family:var(--font-head); }
+
+/* timer popup */
+.timer-popup {
+  display:none;
+  gap:8px;
+  padding:8px 0 2px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.timer-popup.open { display:flex; }
+
+.timer-option {
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  padding:5px 14px;
+  font-size:12px;
+  font-family:var(--font-head);
+  font-weight:600;
+  cursor:pointer;
+  color:var(--text2);
+  transition:all 0.2s;
+}
+.timer-option:hover { border-color:var(--accent2); color:var(--accent2); }
+.timer-option.selected { background:rgba(247,97,79,0.15); border-color:var(--accent2); color:var(--accent2); }
+
+/* image input hidden */
+#imgInput { display:none; }
+
+/* ============================================================
+   SCREEN 8 — ADMIN LOCK
+   ============================================================ */
+#s-admin-lock { background:var(--bg); }
+
+/* ============================================================
+   SCREEN 9 — ADMIN PANEL
+   ============================================================ */
+#s-admin {
+  background:var(--bg);
+  justify-content:flex-start;
+  padding:0;
+  align-items:stretch;
+}
+
+.admin-content { flex:1; overflow-y:auto; padding:16px; }
+
+.admin-section {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  margin-bottom:14px;
+  overflow:hidden;
+}
+
+.admin-section-title {
+  padding:12px 16px;
+  font-size:11px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text2);
+  font-family:var(--font-head);
+  font-weight:700;
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+
+.active-user-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+}
+.active-user-row:last-child { border-bottom:none; }
+
+.active-user-info { flex:1; min-width:0; }
+.active-user-name { font-weight:600; font-size:13px; display:flex; align-items:center; gap:6px; }
+.active-user-email { font-size:11px; color:var(--text2); margin-top:2px; }
+
+.admin-badge {
+  background:linear-gradient(135deg,var(--admin-gold),#ffd98a);
+  color:#1a1200;
+  border-radius:4px;
+  padding:2px 6px;
+  font-size:9px;
+  font-weight:800;
+  font-family:var(--font-head);
+  letter-spacing:0.5px;
+}
+
+.admin-user-actions { display:flex; gap:6px; align-items:center; }
+
+.del-user-btn {
+  width:28px; height:28px;
+  border-radius:7px;
+  background:rgba(247,79,79,0.1);
+  border:1px solid rgba(247,79,79,0.2);
+  color:var(--danger);
+  font-size:13px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.del-user-btn:hover { background:rgba(247,79,79,0.25); }
+
+.set-admin-btn {
+  width:28px; height:28px;
+  border-radius:7px;
+  background:rgba(247,195,79,0.1);
+  border:1px solid rgba(247,195,79,0.2);
+  color:var(--admin-gold);
+  font-size:13px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.set-admin-btn:hover { background:rgba(247,195,79,0.25); }
+
+.admin-pw-form { padding:14px 16px; }
+.admin-pw-row { display:flex; gap:8px; align-items:flex-end; }
+.admin-pw-row input { flex:1; }
+.admin-pw-row .btn { width:auto; padding:12px 18px; }
+
+/* ============================================================
+   SCREEN 10 — PROFILE
+   ============================================================ */
+#s-profile {
+  background:var(--bg);
+  justify-content:flex-start;
+  padding:0;
+  align-items:stretch;
+}
+
+.profile-body { flex:1; overflow-y:auto; padding:20px 18px; }
+
+.profile-avatar-wrap {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin-bottom:24px;
+}
+
+.profile-avatar {
+  width:80px; height:80px;
+  border-radius:50%;
+  background:var(--surface3);
+  border:2px solid var(--border2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px;
+  font-family:var(--font-head);
+  font-weight:800;
+  position:relative;
+  cursor:pointer;
+  overflow:hidden;
+}
+
+.profile-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+
+.profile-avatar-edit-hint {
+  font-size:11px;
+  color:var(--text2);
+  margin-top:8px;
+  letter-spacing:0.5px;
+}
+
+.profile-info-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:12px;
+}
+
+.profile-info-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:13px 16px;
+  border-bottom:1px solid var(--border);
+}
+.profile-info-row:last-child { border-bottom:none; }
+
+.pir-label { font-size:11px; color:var(--text2); letter-spacing:1px; text-transform:uppercase; }
+.pir-val { font-size:14px; font-weight:600; }
+
+.friends-count-badge {
+  background:var(--accent);
+  color:#fff;
+  border-radius:6px;
+  padding:3px 10px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.bio-box {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 16px;
+  font-size:13px;
+  line-height:1.6;
+  color:var(--text2);
+}
+
+/* ============================================================
+   SCREEN 11 — EDIT PROFILE
+   ============================================================ */
+#s-edit-profile {
+  background:var(--bg);
+  justify-content:flex-start;
+  padding:0;
+  align-items:stretch;
+}
+
+.edit-profile-body { flex:1; overflow-y:auto; padding:16px 18px; }
+
+/* ============================================================
+   SCREEN 12 — FRIENDS PASSWORD
+   ============================================================ */
+#s-friends-lock { background:var(--bg); }
+
+/* ============================================================
+   SCREEN 13 — FRIENDS LIST
+   ============================================================ */
+#s-friends {
+  background:var(--bg);
+  justify-content:flex-start;
+  padding:0;
+  align-items:stretch;
+}
+
+.friends-list { flex:1; overflow-y:auto; padding:8px 0; }
+
+/* ===== AVATAR COLORS ===== */
+.av-blue { background:rgba(79,142,247,0.2); color:var(--accent); }
+.av-green { background:rgba(79,247,160,0.2); color:var(--accent3); }
+.av-red { background:rgba(247,97,79,0.2); color:var(--accent2); }
+.av-gold { background:rgba(247,195,79,0.2); color:var(--admin-gold); }
+.av-purple { background:rgba(160,79,247,0.2); color:#a04ff7; }
+
+/* OVERLAY */
+.overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(4px);
+  animation:fadeIn 0.2s;
+}
+.overlay.open { display:flex; }
+
+.overlay-card {
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:18px;
+  padding:28px 24px;
+  width:300px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  animation:fadeUp 0.25s ease;
+}
+
+.overlay-title { font-family:var(--font-head); font-weight:700; font-size:17px; margin-bottom:6px; }
+.overlay-sub { font-size:13px; color:var(--text2); margin-bottom:20px; line-height:1.5; }
+
+/* divider */
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+/* ===== TOAST ===== */
+.toast {
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--surface3);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:10px 20px;
+  font-size:13px;
+  font-family:var(--font-head);
+  font-weight:600;
+  z-index:999;
+  opacity:0;
+  pointer-events:none;
+  transition:all 0.3s;
+  white-space:nowrap;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.success { border-color:rgba(79,247,160,0.4); color:var(--accent3); }
+.toast.error-toast { border-color:rgba(247,79,79,0.4); color:var(--danger); }
+
+</style>
+</head>
+<body>
+
+<!-- ==================== SCREEN 1: SECURITY ==================== -->
+<div id="s-security" class="screen active">
+  <div class="logo">ZAM CHAT</div>
+  <div class="logo-sub">Private · Secure · Yours</div>
+  <div class="card" style="animation-delay:0.15s">
+    <div class="card-title">Security Lock 🔒</div>
+    <div class="card-sub">Enter all 3 passwords</div>
+    <div class="step-dots">
+      <div class="step-dot active" id="sd1"></div>
+      <div class="step-dot" id="sd2"></div>
+      <div class="step-dot" id="sd3"></div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Password 1</label>
+      <input type="password" id="sec-p1" placeholder="••••••••" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Password 2</label>
+      <input type="password" id="sec-p2" placeholder="••••••••" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Password 3</label>
+      <input type="password" id="sec-p3" placeholder="••••••••" />
+    </div>
+    <div class="err-msg" id="sec-err"></div>
+    <button class="btn btn-accent" onclick="checkSecurity()" style="margin-top:8px">ENTER →</button>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 2: CHOOSE ==================== -->
+<div id="s-choose" class="screen">
+  <div class="logo">ZAM CHAT</div>
+  <div class="logo-sub">Welcome back</div>
+  <div class="choose-card">
+    <button class="btn btn-accent" onclick="showScreen('s-login')">Account</button>
+    <button class="btn btn-outline" onclick="showScreen('s-signup')">New Account</button>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 3: SIGNUP ==================== -->
+<div id="s-signup" class="screen">
+  <div class="logo" style="font-size:28px;margin-bottom:4px">Create Account</div>
+  <div class="logo-sub" style="margin-bottom:24px">Join ZAM CHAT</div>
+  <div class="card">
+    <div class="input-group">
+      <label class="input-label">Username *</label>
+      <input type="text" id="su-username" placeholder="your_username" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Password *</label>
+      <input type="password" id="su-password" placeholder="••••••••" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Email (optional)</label>
+      <input type="email" id="su-email" placeholder="you@email.com" />
+    </div>
+    <div class="err-msg" id="su-err"></div>
+    <button class="btn btn-accent" onclick="doSignup()">ENTER →</button>
+    <div style="margin-top:12px;text-align:center">
+      <span style="font-size:13px;color:var(--text2)">Already have account? </span>
+      <span style="font-size:13px;color:var(--accent);cursor:pointer" onclick="showScreen('s-login')">Login</span>
+    </div>
+  </div>
+  <div style="margin-top:16px"><span class="back-btn" onclick="showScreen('s-choose')">←</span></div>
+</div>
+
+<!-- ==================== SCREEN 4: LOGIN ==================== -->
+<div id="s-login" class="screen">
+  <div class="logo" style="font-size:28px;margin-bottom:4px">Account</div>
+  <div class="logo-sub" style="margin-bottom:24px">Login to ZAM CHAT</div>
+  <div class="card">
+    <div class="input-group">
+      <label class="input-label">Username *</label>
+      <input type="text" id="li-username" placeholder="your_username" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Password *</label>
+      <input type="password" id="li-password" placeholder="••••••••" />
+    </div>
+    <div class="err-msg" id="li-err"></div>
+    <button class="btn btn-accent" onclick="doLogin()">ENTER →</button>
+    <div style="margin-top:12px;text-align:center">
+      <span style="font-size:13px;color:var(--text2)">New here? </span>
+      <span style="font-size:13px;color:var(--accent);cursor:pointer" onclick="showScreen('s-signup')">Create Account</span>
+    </div>
+  </div>
+  <div style="margin-top:16px"><span class="back-btn" onclick="showScreen('s-choose')">←</span></div>
+</div>
+
+<!-- ==================== SCREEN 5: HOME ==================== -->
+<div id="s-home" class="screen">
+  <div class="app-layout">
+    <div class="top-bar">
+      <div class="top-bar-logo">ZAM CHAT</div>
+      <div class="top-bar-icons">
+        <div class="icon-btn" onclick="goSearch()" title="Search">🔍</div>
+        <div class="icon-btn" onclick="goProfile()" title="Profile">👤</div>
+      </div>
+    </div>
+
+    <div class="home-feed" id="home-feed">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active" id="nav-home">
+        <span class="zam-pill active-nav">ZAM CHAT</span>
+      </div>
+      <div class="nav-item" id="nav-admin" onclick="goAdminLock()">
+        <span class="nav-icon">🛡️</span>
+        <span class="nav-label">Admin</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 6: SEARCH ==================== -->
+<div id="s-search" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="goHome()">←</div>
+    <div class="page-title">Search Users</div>
+  </div>
+  <div class="search-page-bar">
+    <input class="search-page-input" id="search-input" placeholder="Search by username..." onkeydown="if(event.key==='Enter')doSearch()" />
+    <button class="search-go-btn" onclick="doSearch()">🔍</button>
+  </div>
+  <div class="search-results" id="search-results">
+    <div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;">Search for a user to connect 👆</div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 7: CHAT ==================== -->
+<div id="s-chat" class="screen">
+  <div class="chat-header">
+    <div class="back-btn" onclick="goHome()">←</div>
+    <div id="chat-peer-avatar" class="msg-avatar av-blue" style="width:34px;height:34px;font-size:14px"></div>
+    <div class="chat-header-info">
+      <div class="chat-header-name" id="chat-peer-name">Username</div>
+      <div class="chat-header-status"><span class="status-dot"></span> Online</div>
+    </div>
+    <div class="timer-indicator" id="timer-indicator" style="display:none">
+      ⏱ <span id="timer-label">5 HR</span>
+    </div>
+  </div>
+
+  <div class="messages-list" id="messages-list"></div>
+
+  <div class="chat-input-bar">
+    <div class="save-dot-row">
+      <button class="save-dot" id="save-dot" onclick="toggleSaveChat()" title="Save Chat"></button>
+      <span class="save-dot-label" id="save-dot-label">Tap to save chat</span>
+    </div>
+    <div class="timer-popup" id="timer-popup">
+      <div class="timer-option" onclick="setTimer('5 DAYS',5*24*60*60)">5 DAYS</div>
+      <div class="timer-option" onclick="setTimer('1 DAY',24*60*60)">1 DAY</div>
+      <div class="timer-option" onclick="setTimer('5 HR',5*60*60)">5 HR</div>
+    </div>
+    <div class="chat-input-row">
+      <button class="chat-action-btn" id="voice-btn" onclick="toggleVoice()" title="Voice Note">🎙️</button>
+      <input type="file" id="imgInput" accept="image/*" onchange="sendImage(event)" />
+      <button class="chat-action-btn" onclick="document.getElementById('imgInput').click()" title="Send Image">🖼️</button>
+      <textarea class="chat-msg-input" id="msg-input" placeholder="Message..." rows="1" onkeydown="msgKeydown(event)" oninput="autoResize(this)"></textarea>
+      <button class="chat-action-btn" id="timer-toggle-btn" onclick="toggleTimerPopup()" title="Disappearing timer">⏱</button>
+      <button class="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 8: ADMIN LOCK ==================== -->
+<div id="s-admin-lock" class="screen">
+  <div class="logo" style="font-size:28px;margin-bottom:4px">Admin Access</div>
+  <div class="logo-sub" style="margin-bottom:28px">Protected Zone 🛡️</div>
+  <div class="card">
+    <div class="input-group">
+      <label class="input-label">Admin Password</label>
+      <input type="password" id="adm-p1" placeholder="••••••••" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Confirm Password</label>
+      <input type="password" id="adm-p2" placeholder="••••••••" />
+    </div>
+    <div class="err-msg" id="adm-err"></div>
+    <button class="btn btn-accent" onclick="checkAdmin()">ENTER →</button>
+  </div>
+  <div style="margin-top:16px"><span class="back-btn" onclick="goHome()">←</span></div>
+</div>
+
+<!-- ==================== SCREEN 9: ADMIN PANEL ==================== -->
+<div id="s-admin" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="goHome()">←</div>
+    <div class="page-title">Admin Panel</div>
+    <div style="font-size:11px;color:var(--admin-gold);font-family:var(--font-head);font-weight:700;letter-spacing:1px;">⭐ ADMIN</div>
+  </div>
+
+  <div class="admin-content">
+    <!-- Active Users -->
+    <div class="admin-section">
+      <div class="admin-section-title">Active Users</div>
+      <div id="admin-user-list">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- Change Security Password -->
+    <div class="admin-section">
+      <div class="admin-section-title">Change Security Password</div>
+      <div class="admin-pw-form">
+        <div class="input-group"><input type="password" id="new-sec-p1" placeholder="New Password 1" /></div>
+        <div class="input-group"><input type="password" id="new-sec-p2" placeholder="New Password 2" /></div>
+        <div class="input-group"><input type="password" id="new-sec-p3" placeholder="New Password 3" /></div>
+        <button class="btn btn-green" onclick="changeSecurityPw()">SAVE</button>
+      </div>
+    </div>
+
+    <!-- Change Admin Password -->
+    <div class="admin-section">
+      <div class="admin-section-title">Change Admin Password</div>
+      <div class="admin-pw-form">
+        <div class="input-group"><input type="password" id="new-adm-pw" placeholder="New Admin Password" /></div>
+        <button class="btn btn-green" onclick="changeAdminPw()">SAVE</button>
+      </div>
+    </div>
+
+    <!-- Change Friends Password -->
+    <div class="admin-section">
+      <div class="admin-section-title">Change Friend Password</div>
+      <div class="admin-pw-form">
+        <div class="input-group"><input type="password" id="new-friend-pw" placeholder="New Friend Password" /></div>
+        <button class="btn btn-green" onclick="changeFriendPw()">SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav" style="justify-content:center">
+    <span class="zam-pill">ZAM CHAT</span>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 10: PROFILE ==================== -->
+<div id="s-profile" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="goHome()">←</div>
+    <div class="page-title">Profile</div>
+  </div>
+
+  <div class="profile-body">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar" id="profile-avatar-display" onclick="goEditProfile()">
+        <span id="profile-avatar-letter">Z</span>
+      </div>
+      <div class="profile-avatar-edit-hint">Tap to edit profile ✏️</div>
+    </div>
+
+    <div class="profile-info-card">
+      <div class="profile-info-row">
+        <span class="pir-label">Username</span>
+        <span class="pir-val" id="profile-username-display">—</span>
+      </div>
+      <div class="profile-info-row">
+        <span class="pir-label">Friends</span>
+        <span class="friends-count-badge" id="profile-friends-count" onclick="goFriendsLock()">0</span>
+      </div>
+      <div class="profile-info-row">
+        <span class="pir-label">Gender</span>
+        <span class="pir-val" id="profile-gender-display">—</span>
+      </div>
+      <div class="profile-info-row">
+        <span class="pir-label">Age</span>
+        <span class="pir-val" id="profile-age-display">—</span>
+      </div>
+    </div>
+
+    <div class="bio-box" id="profile-bio-display">No bio yet.</div>
+  </div>
+
+  <div class="bottom-nav" style="justify-content:center">
+    <span class="zam-pill">ZAM CHAT</span>
+    <span style="margin-left:12px" class="icon-btn" onclick="doLogout()">🚪</span>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 11: EDIT PROFILE ==================== -->
+<div id="s-edit-profile" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="showScreen('s-profile');refreshProfile()">←</div>
+    <div class="page-title">Edit Profile</div>
+  </div>
+
+  <div class="edit-profile-body">
+    <div class="profile-avatar-wrap" style="margin-bottom:16px">
+      <div class="profile-avatar" onclick="document.getElementById('avatar-img-input').click()">
+        <span id="edit-avatar-letter">Z</span>
+        <img id="edit-avatar-img" src="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" />
+      </div>
+      <input type="file" id="avatar-img-input" accept="image/*" style="display:none" onchange="handleAvatarChange(event)" />
+      <div class="profile-avatar-edit-hint">Tap to change photo</div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Username</label>
+      <input type="text" id="edit-username" placeholder="new_username" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">New Password</label>
+      <input type="password" id="edit-password" placeholder="leave blank to keep" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Email</label>
+      <input type="email" id="edit-email" placeholder="you@email.com" />
+    </div>
+    <div style="display:flex;gap:10px">
+      <div class="input-group" style="flex:1">
+        <label class="input-label">Gender</label>
+        <input type="text" id="edit-gender" placeholder="Male / Female" />
+      </div>
+      <div class="input-group" style="flex:1">
+        <label class="input-label">Age (18+)</label>
+        <input type="number" id="edit-age" placeholder="18" min="18" />
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Bio</label>
+      <textarea id="edit-bio" placeholder="Tell something about yourself..." style="height:80px;resize:none;border-radius:12px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;width:100%;"></textarea>
+    </div>
+
+    <button class="btn btn-accent" onclick="saveProfile()">SAVE</button>
+  </div>
+
+  <div class="bottom-nav" style="justify-content:center">
+    <span class="zam-pill">ZAM CHAT</span>
+  </div>
+</div>
+
+<!-- ==================== SCREEN 12: FRIENDS LOCK ==================== -->
+<div id="s-friends-lock" class="screen">
+  <div class="logo" style="font-size:26px;margin-bottom:4px">Friends</div>
+  <div class="logo-sub" style="margin-bottom:28px">Password Protected 🔐</div>
+  <div class="card">
+    <div class="input-group">
+      <label class="input-label">Friend Password</label>
+      <input type="password" id="fl-p1" placeholder="••••••••" />
+    </div>
+    <div class="input-group">
+      <label class="input-label">Confirm Password</label>
+      <input type="password" id="fl-p2" placeholder="••••••••" />
+    </div>
+    <div class="err-msg" id="fl-err"></div>
+    <button class="btn btn-accent" onclick="checkFriendPw()">ENTER →</button>
+  </div>
+  <div style="margin-top:16px"><span class="back-btn" onclick="showScreen('s-profile');refreshProfile()">←</span></div>
+</div>
+
+<!-- ==================== SCREEN 13: FRIENDS LIST ==================== -->
+<div id="s-friends" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="showScreen('s-profile');refreshProfile()">←</div>
+    <div class="page-title">Friends</div>
+    <div id="friends-count-badge" style="font-size:12px;color:var(--text2);margin-left:auto"></div>
+  </div>
+  <div class="friends-list" id="friends-list"></div>
+  <div class="bottom-nav" style="justify-content:center">
+    <span class="zam-pill">ZAM CHAT</span>
+  </div>
+</div>
+
+<!-- ==================== TOAST ==================== -->
+<div class="toast" id="toast"></div>
+
+<!-- ==================== OVERLAY: CONFIRM DELETE USER ==================== -->
+<div class="overlay" id="overlay-del-user">
+  <div class="overlay-card">
+    <div class="overlay-title">Delete Account? ⚠️</div>
+    <div class="overlay-sub">This will permanently delete this user from ZAM CHAT. This cannot be undone.</div>
+    <button class="btn btn-danger" onclick="confirmDeleteUser()" style="margin-bottom:10px">Delete Account</button>
+    <button class="btn btn-outline" onclick="closeOverlay('overlay-del-user')">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  securityPws: {p1:'Zam.chat@', p2:'Zam.chat@zidan.', p3:'Zam.chat@zidan.com'},
+  adminPw: 'Admin.#zamChat',
+  friendPw: 'ZamFriends@1',
+  users: {}, // { username: { password, email, gender, age, bio, avatar, following:[], adminBadge:false } }
+  currentUser: null,
+  chats: {}, // { peerKey: [{id,from,to,text,type,time,saved,disappearAt}] }
+  chatPeer: null,
+  chatSaved: false,
+  timerSelected: null,
+  timerMs: null,
+  isRecording: false,
+  mediaRecorder: null,
+  audioChunks: [],
+  pendingDeleteUser: null,
+};
+
+// Persist to localStorage
+function save() {
+  try {
+    localStorage.setItem('zamchat', JSON.stringify({
+      securityPws: state.securityPws,
+      adminPw: state.adminPw,
+      friendPw: state.friendPw,
+      users: state.users,
+      chats: state.chats,
+    }));
+  } catch(e){}
+}
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('zamchat') || '{}');
+    if(d.securityPws) state.securityPws = d.securityPws;
+    if(d.adminPw) state.adminPw = d.adminPw;
+    if(d.friendPw) state.friendPw = d.friendPw;
+    if(d.users) state.users = d.users;
+    if(d.chats) state.chats = d.chats;
+  } catch(e){}
+}
+
+load();
+
+// ============================================================
+// UTILS
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2600);
+}
+
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function avatarColor(username) {
+  const colors = ['av-blue','av-green','av-red','av-gold','av-purple'];
+  let sum = 0;
+  for(let c of (username||'Z')) sum += c.charCodeAt(0);
+  return colors[sum % colors.length];
+}
+
+function avatarLetter(username) {
+  return (username||'?')[0].toUpperCase();
+}
+
+function chatKey(a, b) {
+  return [a,b].sort().join('__');
+}
+
+function timeStr(ts) {
+  if(!ts) return '';
+  const d = new Date(ts);
+  const h = d.getHours().toString().padStart(2,'0');
+  const m = d.getMinutes().toString().padStart(2,'0');
+  return h+':'+m;
+}
+
+// ============================================================
+// SCREEN 1 — SECURITY
+// ============================================================
+function checkSecurity() {
+  const p1 = document.getElementById('sec-p1').value.trim();
+  const p2 = document.getElementById('sec-p2').value.trim();
+  const p3 = document.getElementById('sec-p3').value.trim();
+  const err = document.getElementById('sec-err');
+
+  // Update dots
+  const d1 = document.getElementById('sd1');
+  const d2 = document.getElementById('sd2');
+  const d3 = document.getElementById('sd3');
+
+  if(p1 === state.securityPws.p1) { d1.classList.add('done'); d1.classList.remove('active'); }
+  if(p2 === state.securityPws.p2) { d2.classList.add('done'); d2.classList.remove('active'); }
+  if(p3 === state.securityPws.p3) { d3.classList.add('done'); d3.classList.remove('active'); }
+
+  if(p1 !== state.securityPws.p1 || p2 !== state.securityPws.p2 || p3 !== state.securityPws.p3) {
+    err.textContent = 'Incorrect password(s). Try again.';
+    ['sec-p1','sec-p2','sec-p3'].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.add('error');
+      setTimeout(()=>el.classList.remove('error'), 500);
+    });
+    // reset dots
+    d1.className = 'step-dot active'; d2.className = 'step-dot'; d3.className = 'step-dot';
+    return;
+  }
+  err.textContent = '';
+  showScreen('s-choose');
+}
+
+// Allow enter key on security
+document.querySelectorAll('#s-security input').forEach(inp => {
+  inp.addEventListener('keydown', e => { if(e.key==='Enter') checkSecurity(); });
+});
+
+// ============================================================
+// SCREEN 3 — SIGNUP
+// ============================================================
+function doSignup() {
+  const username = document.getElementById('su-username').value.trim().toLowerCase();
+  const password = document.getElementById('su-password').value;
+  const email = document.getElementById('su-email').value.trim();
+  const err = document.getElementById('su-err');
+
+  if(!username || !password) { err.textContent = 'Username and password required.'; return; }
+  if(username.length < 3) { err.textContent = 'Username must be at least 3 characters.'; return; }
+  if(password.length < 4) { err.textContent = 'Password must be at least 4 characters.'; return; }
+  if(state.users[username]) { err.textContent = 'Username already taken.'; return; }
+
+  state.users[username] = { password, email, gender:'', age:'', bio:'', avatar:'', following:[], adminBadge:false };
+  save();
+  state.currentUser = username;
+  err.textContent = '';
+  showToast('Account created! Welcome 🎉', 'success');
+  goHome();
+}
+
+// ============================================================
+// SCREEN 4 — LOGIN
+// ============================================================
+function doLogin() {
+  const username = document.getElementById('li-username').value.trim().toLowerCase();
+  const password = document.getElementById('li-password').value;
+  const err = document.getElementById('li-err');
+
+  if(!username || !password) { err.textContent = 'Please fill all fields.'; return; }
+  const user = state.users[username];
+  if(!user || user.password !== password) { err.textContent = 'Invalid username or password.'; return; }
+  state.currentUser = username;
+  err.textContent = '';
+  goHome();
+}
+
+// ============================================================
+// SCREEN 5 — HOME
+// ============================================================
+function goHome() {
+  showScreen('s-home');
+  renderHome();
+}
+
+function renderHome() {
+  const feed = document.getElementById('home-feed');
+  const u = state.currentUser;
+  if(!u) return;
+  const user = state.users[u];
+  const following = user.following || [];
+
+  if(following.length === 0) {
+    feed.innerHTML = `
+      <div class="home-empty">
+        <div class="home-empty-img">🐦</div>
+        <div class="home-empty-title">No friends yet</div>
+        <div class="home-empty-count">0 Friend</div>
+        <div style="font-size:13px;color:var(--text2);text-align:center;max-width:220px;line-height:1.6">Search for users and follow them to start chatting</div>
+        <button class="btn btn-accent" style="width:auto;padding:11px 28px;margin-top:8px" onclick="goSearch()">Find Friends 🔍</button>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  for(const peer of following) {
+    const peerUser = state.users[peer];
+    if(!peerUser) continue;
+    const key = chatKey(u, peer);
+    const msgs = state.chats[key] || [];
+    const lastMsg = msgs[msgs.length-1];
+    const preview = lastMsg ? (lastMsg.type==='image'?'📷 Image':lastMsg.type==='voice'?'🎙️ Voice':lastMsg.text) : 'Tap to chat';
+    const t = lastMsg ? timeStr(lastMsg.time) : '';
+    const col = avatarColor(peer);
+    const letter = avatarLetter(peer);
+    const avatarHtml = peerUser.avatar
+      ? `<div style="width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0"><img src="${peerUser.avatar}" style="width:100%;height:100%;object-fit:cover"/></div>`
+      : `<div class="msg-avatar ${col}" style="width:42px;height:42px;font-size:17px">${letter}</div>`;
+
+    const adminBadge = peerUser.adminBadge ? ' <span class="admin-badge">★ ADMIN</span>' : '';
+
+    html += `<div class="friend-row" onclick="openChat('${peer}')">
+      ${avatarHtml}
+      <div class="friend-row-info">
+        <div class="friend-row-name">${peer}${adminBadge}</div>
+        <div class="friend-row-preview">${preview}</div>
+      </div>
+      <div class="friend-row-time">${t}</div>
+    </div>`;
+  }
+  feed.innerHTML = html;
+}
+
+function doLogout() {
+  state.currentUser = null;
+  showScreen('s-choose');
+}
+
+// ============================================================
+// SCREEN 6 — SEARCH
+// ============================================================
+function goSearch() {
+  showScreen('s-search');
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-results').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);font-size:14px;">Search for a user to connect 👆</div>';
+}
+
+function doSearch() {
+  const q = document.getElementById('search-input').value.trim().toLowerCase();
+  const res = document.getElementById('search-results');
+  if(!q) { res.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);">Enter a username to search</div>'; return; }
+
+  const cu = state.currentUser;
+  const matches = Object.keys(state.users).filter(u => u !== cu && u.includes(q));
+
+  if(!matches.length) { res.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2);">No users found 😕</div>'; return; }
+
+  const following = state.users[cu].following || [];
+  let html = '';
+  for(const u of matches) {
+    const col = avatarColor(u);
+    const letter = avatarLetter(u);
+    const pu = state.users[u];
+    const avatarHtml = pu.avatar
+      ? `<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0"><img src="${pu.avatar}" style="width:100%;height:100%;object-fit:cover"/></div>`
+      : `<div class="msg-avatar ${col}" style="width:40px;height:40px;font-size:16px">${letter}</div>`;
+
+    const isFollowing = following.includes(u);
+    const adminBadge = pu.adminBadge ? '<span class="admin-badge" style="margin-left:4px">★</span>' : '';
+
+    if(isFollowing) {
+      html += `<div class="search-result-item">
+        ${avatarHtml}
+        <div class="s-info">
+          <div class="s-name">${u}${adminBadge}</div>
+          <div class="s-id">Following</div>
+        </div>
+        <button class="btn btn-sm btn-accent" onclick="openChat('${u}')">Chat 💬</button>
+        <button class="btn btn-sm btn-danger" onclick="unfollowUser('${u}')" style="margin-left:6px">✕</button>
+      </div>`;
+    } else {
+      html += `<div class="search-result-item">
+        ${avatarHtml}
+        <div class="s-info">
+          <div class="s-name">${u}${adminBadge}</div>
+          <div class="s-id">@${u}</div>
+        </div>
+        <button class="btn btn-sm btn-accent" onclick="followUser('${u}')">Follow</button>
+      </div>`;
+    }
+  }
+  res.innerHTML = html;
+}
+
+function followUser(peer) {
+  const cu = state.currentUser;
+  if(!state.users[cu].following) state.users[cu].following = [];
+  if(!state.users[cu].following.includes(peer)) state.users[cu].following.push(peer);
+  save();
+  showToast(`Following @${peer} ✅`, 'success');
+  doSearch();
+}
+
+function unfollowUser(peer) {
+  const cu = state.currentUser;
+  state.users[cu].following = (state.users[cu].following||[]).filter(u=>u!==peer);
+  save();
+  showToast(`Unfollowed @${peer}`, '');
+  doSearch();
+}
+
+// ============================================================
+// SCREEN 7 — CHAT
+// ============================================================
+function openChat(peer) {
+  state.chatPeer = peer;
+  state.chatSaved = false;
+  state.timerSelected = null;
+  state.timerMs = null;
+
+  document.getElementById('chat-peer-name').textContent = peer;
+  const col = avatarColor(peer);
+  const pu = state.users[peer];
+  const avEl = document.getElementById('chat-peer-avatar');
+  if(pu && pu.avatar) {
+    avEl.innerHTML = `<img src="${pu.avatar}" style="width:34px;height:34px;border-radius:50%;object-fit:cover"/>`;
+    avEl.className = 'msg-avatar';
+  } else {
+    avEl.className = `msg-avatar ${col}`;
+    avEl.textContent = avatarLetter(peer);
+  }
+
+  // reset UI
+  document.getElementById('save-dot').classList.remove('saved');
+  document.getElementById('save-dot-label').textContent = 'Tap to save chat';
+  document.getElementById('timer-popup').classList.remove('open');
+  document.getElementById('timer-indicator').style.display = 'none';
+  document.querySelectorAll('.timer-option').forEach(o=>o.classList.remove('selected'));
+
+  showScreen('s-chat');
+  renderMessages();
+  cleanExpiredMessages();
+}
+
+function renderMessages() {
+  const peer = state.chatPeer;
+  const cu = state.currentUser;
+  const key = chatKey(cu, peer);
+  const msgs = state.chats[key] || [];
+  const list = document.getElementById('messages-list');
+
+  if(!msgs.length) {
+    list.innerHTML = `<div style="text-align:center;color:var(--text2);font-size:13px;padding:30px">No messages yet. Say hi! 👋</div>`;
+    return;
+  }
+
+  let html = '';
+  const now = Date.now();
+  for(const m of msgs) {
+    if(m.disappearAt && m.disappearAt < now && !m.saved) continue;
+    const isOut = m.from === cu;
+    const col = avatarColor(m.from);
+    const pu = state.users[m.from];
+    let avHtml = '';
+    if(!isOut) {
+      avHtml = pu && pu.avatar
+        ? `<div style="width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0"><img src="${pu.avatar}" style="width:100%;height:100%;object-fit:cover"/></div>`
+        : `<div class="msg-avatar ${col}">${avatarLetter(m.from)}</div>`;
+    }
+
+    let content = '';
+    if(m.type === 'image') {
+      content = `<img src="${m.data}" class="msg-image" />`;
+    } else if(m.type === 'voice') {
+      const waves = Array.from({length:12},(_,i)=>`<span style="height:${4+Math.sin(i)*8+8}px"></span>`).join('');
+      content = `<div class="voice-msg">
+        <button class="voice-play-btn" onclick="playAudio('${m.id}')">▶</button>
+        <div class="voice-wave">${waves}</div>
+        <span style="font-size:11px;color:var(--text2)">${m.duration||'0'}s</span>
+        <audio id="audio-${m.id}" src="${m.data}" style="display:none"></audio>
+      </div>`;
+    } else {
+      content = m.text;
+    }
+
+    const savedMark = m.saved ? '<span style="font-size:10px;color:var(--accent3);margin-left:4px">●</span>' : '';
+    html += `<div class="msg-row ${isOut?'out':'in'}">
+      ${avHtml}
+      <div>
+        <div class="msg-bubble">${content}${savedMark}</div>
+        <div class="msg-time">${timeStr(m.time)}</div>
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html || `<div style="text-align:center;color:var(--text2);font-size:13px;padding:30px">No messages yet. Say hi! 👋</div>`;
+  list.scrollTop = list.scrollHeight;
+}
+
+function cleanExpiredMessages() {
+  const peer = state.chatPeer;
+  const cu = state.currentUser;
+  const key = chatKey(cu, peer);
+  if(!state.chats[key]) return;
+  const now = Date.now();
+  const before = state.chats[key].length;
+  state.chats[key] = state.chats[key].filter(m => !m.disappearAt || m.disappearAt > now || m.saved);
+  if(state.chats[key].length !== before) { save(); renderMessages(); }
+}
+
+function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if(!text) return;
+
+  const cu = state.currentUser;
+  const peer = state.chatPeer;
+  const key = chatKey(cu, peer);
+  if(!state.chats[key]) state.chats[key] = [];
+
+  const msg = {
+    id: Date.now()+'_'+Math.random().toString(36).slice(2),
+    from: cu, to: peer, text, type:'text',
+    time: Date.now(), saved: state.chatSaved,
+    disappearAt: state.timerMs ? Date.now() + state.timerMs * 1000 : null,
+  };
+
+  state.chats[key].push(msg);
+  save();
+  input.value = '';
+  input.style.height = 'auto';
+  renderMessages();
+}
+
+function msgKeydown(e) {
+  if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function sendImage(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const cu = state.currentUser;
+    const peer = state.chatPeer;
+    const key = chatKey(cu, peer);
+    if(!state.chats[key]) state.chats[key] = [];
+    const msg = {
+      id: Date.now()+'_img',
+      from:cu, to:peer, type:'image', data:ev.target.result, text:'',
+      time:Date.now(), saved:state.chatSaved,
+      disappearAt: state.timerMs ? Date.now() + state.timerMs * 1000 : null,
+    };
+    state.chats[key].push(msg);
+    save();
+    renderMessages();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function playAudio(id) {
+  const a = document.getElementById('audio-'+id);
+  if(a) a.paused ? a.play() : a.pause();
+}
+
+function toggleSaveChat() {
+  state.chatSaved = !state.chatSaved;
+  const dot = document.getElementById('save-dot');
+  const label = document.getElementById('save-dot-label');
+  if(state.chatSaved) {
+    dot.classList.add('saved');
+    label.textContent = 'Chat saved ●';
+    label.style.color = 'var(--accent3)';
+    showToast('Chat saved — messages won\'t disappear 💾', 'success');
+  } else {
+    dot.classList.remove('saved');
+    label.textContent = 'Tap to save chat';
+    label.style.color = 'var(--text2)';
+  }
+}
+
+function toggleTimerPopup() {
+  const popup = document.getElementById('timer-popup');
+  popup.classList.toggle('open');
+  const btn = document.getElementById('timer-toggle-btn');
+  btn.classList.toggle('active', popup.classList.contains('open'));
+}
+
+function setTimer(label, seconds) {
+  state.timerSelected = label;
+  state.timerMs = seconds;
+  document.querySelectorAll('.timer-option').forEach(o => {
+    o.classList.toggle('selected', o.textContent === label);
+  });
+  const ind = document.getElementById('timer-indicator');
+  ind.style.display = 'flex';
+  document.getElementById('timer-label').textContent = label;
+  document.getElementById('timer-popup').classList.remove('open');
+  document.getElementById('timer-toggle-btn').classList.add('active');
+  showToast(`Timer set: messages will vanish in ${label} ⏱`, '');
+}
+
+// Voice notes
+async function toggleVoice() {
+  const btn = document.getElementById('voice-btn');
+  if(!state.isRecording) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      state.mediaRecorder = new MediaRecorder(stream);
+      state.audioChunks = [];
+      state.mediaRecorder.ondataavailable = e => state.audioChunks.push(e.data);
+      state.mediaRecorder.onstop = finishVoice;
+      state.mediaRecorder.start();
+      state.isRecording = true;
+      state.recordStart = Date.now();
+      btn.classList.add('recording');
+      btn.textContent = '⏹';
+    } catch(e) {
+      showToast('Microphone access denied', 'error-toast');
+    }
+  } else {
+    state.mediaRecorder.stop();
+    state.mediaRecorder.stream.getTracks().forEach(t=>t.stop());
+    state.isRecording = false;
+    btn.classList.remove('recording');
+    btn.textContent = '🎙️';
+  }
+}
+
+function finishVoice() {
+  const blob = new Blob(state.audioChunks, {type:'audio/webm'});
+  const reader = new FileReader();
+  const duration = Math.round((Date.now() - state.recordStart) / 1000);
+  reader.onload = ev => {
+    const cu = state.currentUser;
+    const peer = state.chatPeer;
+    const key = chatKey(cu, peer);
+    if(!state.chats[key]) state.chats[key] = [];
+    const msg = {
+      id: Date.now()+'_voice',
+      from:cu, to:peer, type:'voice', data:ev.target.result, text:'',
+      time:Date.now(), saved:state.chatSaved, duration,
+      disappearAt: state.timerMs ? Date.now() + state.timerMs * 1000 : null,
+    };
+    state.chats[key].push(msg);
+    save();
+    renderMessages();
+  };
+  reader.readAsDataURL(blob);
+}
+
+// ============================================================
+// SCREEN 8 — ADMIN LOCK
+// ============================================================
+function goAdminLock() { showScreen('s-admin-lock'); document.getElementById('adm-p1').value=''; document.getElementById('adm-p2').value=''; document.getElementById('adm-err').textContent=''; }
+
+function checkAdmin() {
+  const p1 = document.getElementById('adm-p1').value;
+  const p2 = document.getElementById('adm-p2').value;
+  const err = document.getElementById('adm-err');
+  if(p1 !== state.adminPw || p2 !== state.adminPw) {
+    err.textContent = 'Incorrect admin password.';
+    return;
+  }
+  err.textContent = '';
+  showScreen('s-admin');
+  renderAdminUsers();
+}
+
+// ============================================================
+// SCREEN 9 — ADMIN PANEL
+// ============================================================
+function renderAdminUsers() {
+  const list = document.getElementById('admin-user-list');
+  const users = state.users;
+  if(!Object.keys(users).length) {
+    list.innerHTML = '<div style="padding:16px;color:var(--text2);font-size:13px;text-align:center">No users yet</div>';
+    return;
+  }
+  let html = '';
+  for(const [username, u] of Object.entries(users)) {
+    const col = avatarColor(username);
+    const letter = avatarLetter(username);
+    const avatarHtml = u.avatar
+      ? `<div style="width:34px;height:34px;border-radius:50%;overflow:hidden;flex-shrink:0"><img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover"/></div>`
+      : `<div class="msg-avatar ${col}" style="width:34px;height:34px;font-size:14px">${letter}</div>`;
+    const adminMark = u.adminBadge ? '<span class="admin-badge">★ ADMIN</span>' : '';
+    html += `<div class="active-user-row">
+      ${avatarHtml}
+      <div class="active-user-info">
+        <div class="active-user-name">${username} ${adminMark}</div>
+        <div class="active-user-email">${u.email||'No email'}</div>
+      </div>
+      <div class="admin-user-actions">
+        <button class="set-admin-btn" onclick="toggleAdminBadge('${username}')" title="${u.adminBadge?'Remove Admin':'Set Admin'}">★</button>
+        <button class="del-user-btn" onclick="askDeleteUser('${username}')" title="Delete Account">🗑</button>
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html;
+}
+
+function toggleAdminBadge(username) {
+  if(!state.users[username]) return;
+  state.users[username].adminBadge = !state.users[username].adminBadge;
+  save();
+  renderAdminUsers();
+  showToast(state.users[username].adminBadge ? `★ ${username} is now Admin` : `Admin badge removed from ${username}`, 'success');
+}
+
+function askDeleteUser(username) {
+  state.pendingDeleteUser = username;
+  document.getElementById('overlay-del-user').classList.add('open');
+}
+
+function confirmDeleteUser() {
+  const u = state.pendingDeleteUser;
+  if(u) {
+    // Remove from all following lists
+    for(const [k,v] of Object.entries(state.users)) {
+      if(v.following) v.following = v.following.filter(f=>f!==u);
+    }
+    delete state.users[u];
+    save();
+    renderAdminUsers();
+    showToast(`Account @${u} deleted`, 'error-toast');
+  }
+  closeOverlay('overlay-del-user');
+  state.pendingDeleteUser = null;
+}
+
+function changeSecurityPw() {
+  const p1 = document.getElementById('new-sec-p1').value.trim();
+  const p2 = document.getElementById('new-sec-p2').value.trim();
+  const p3 = document.getElementById('new-sec-p3').value.trim();
+  if(!p1||!p2||!p3) { showToast('Fill all 3 passwords', 'error-toast'); return; }
+  state.securityPws = {p1,p2,p3};
+  save();
+  ['new-sec-p1','new-sec-p2','new-sec-p3'].forEach(id=>document.getElementById(id).value='');
+  showToast('Security passwords updated ✅', 'success');
+}
+
+function changeAdminPw() {
+  const pw = document.getElementById('new-adm-pw').value.trim();
+  if(!pw) { showToast('Enter new password', 'error-toast'); return; }
+  state.adminPw = pw;
+  save();
+  document.getElementById('new-adm-pw').value='';
+  showToast('Admin password updated ✅', 'success');
+}
+
+function changeFriendPw() {
+  const pw = document.getElementById('new-friend-pw').value.trim();
+  if(!pw) { showToast('Enter new password', 'error-toast'); return; }
+  state.friendPw = pw;
+  save();
+  document.getElementById('new-friend-pw').value='';
+  showToast('Friend password updated ✅', 'success');
+}
+
+// ============================================================
+// SCREEN 10 — PROFILE
+// ============================================================
+function goProfile() {
+  showScreen('s-profile');
+  refreshProfile();
+}
+
+function refreshProfile() {
+  const cu = state.currentUser;
+  const u = state.users[cu];
+  if(!u) return;
+  document.getElementById('profile-username-display').textContent = cu;
+  document.getElementById('profile-friends-count').textContent = (u.following||[]).length;
+  document.getElementById('profile-gender-display').textContent = u.gender || '—';
+  document.getElementById('profile-age-display').textContent = u.age || '—';
+  document.getElementById('profile-bio-display').textContent = u.bio || 'No bio yet.';
+  const letter = avatarLetter(cu);
+  const avEl = document.getElementById('profile-avatar-display');
+  if(u.avatar) {
+    avEl.innerHTML = `<img src="${u.avatar}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%"/>`;
+  } else {
+    avEl.innerHTML = `<span id="profile-avatar-letter">${letter}</span>`;
+  }
+}
+
+// ============================================================
+// SCREEN 11 — EDIT PROFILE
+// ============================================================
+function goEditProfile() {
+  const cu = state.currentUser;
+  const u = state.users[cu];
+  document.getElementById('edit-username').value = cu;
+  document.getElementById('edit-password').value = '';
+  document.getElementById('edit-email').value = u.email || '';
+  document.getElementById('edit-gender').value = u.gender || '';
+  document.getElementById('edit-age').value = u.age || '';
+  document.getElementById('edit-bio').value = u.bio || '';
+  document.getElementById('edit-avatar-letter').textContent = avatarLetter(cu);
+  const editImg = document.getElementById('edit-avatar-img');
+  if(u.avatar) { editImg.src = u.avatar; editImg.style.display='block'; }
+  else { editImg.style.display='none'; }
+  showScreen('s-edit-profile');
+}
+
+function handleAvatarChange(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('edit-avatar-img');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveProfile() {
+  const cu = state.currentUser;
+  const newUsername = document.getElementById('edit-username').value.trim().toLowerCase();
+  const newPw = document.getElementById('edit-password').value;
+  const email = document.getElementById('edit-email').value.trim();
+  const gender = document.getElementById('edit-gender').value.trim();
+  const age = parseInt(document.getElementById('edit-age').value) || '';
+  const bio = document.getElementById('edit-bio').value.trim();
+  const avatarImg = document.getElementById('edit-avatar-img');
+
+  if(!newUsername) { showToast('Username cannot be empty', 'error-toast'); return; }
+  if(age && age < 18) { showToast('Age must be 18+', 'error-toast'); return; }
+
+  const userData = { ...state.users[cu] };
+  userData.email = email;
+  userData.gender = gender;
+  userData.age = age;
+  userData.bio = bio;
+  if(newPw) userData.password = newPw;
+  if(avatarImg.style.display !== 'none' && avatarImg.src) userData.avatar = avatarImg.src;
+
+  if(newUsername !== cu) {
+    if(state.users[newUsername]) { showToast('Username already taken', 'error-toast'); return; }
+    // Update following lists
+    for(const [k,v] of Object.entries(state.users)) {
+      if(v.following) v.following = v.following.map(f=>f===cu?newUsername:f);
+    }
+    // Update chat keys (rename)
+    const newChats = {};
+    for(const [k,v] of Object.entries(state.chats)) {
+      const newKey = k.split('__').map(p=>p===cu?newUsername:p).sort().join('__');
+      const newMsgs = v.map(m=>({...m, from:m.from===cu?newUsername:m.from, to:m.to===cu?newUsername:m.to}));
+      newChats[newKey] = newMsgs;
+    }
+    state.chats = newChats;
+    delete state.users[cu];
+    state.users[newUsername] = userData;
+    state.currentUser = newUsername;
+  } else {
+    state.users[cu] = userData;
+  }
+
+  save();
+  showToast('Profile saved ✅', 'success');
+  showScreen('s-profile');
+  refreshProfile();
+}
+
+// ============================================================
+// SCREEN 12 — FRIENDS LOCK
+// ============================================================
+function goFriendsLock() {
+  showScreen('s-friends-lock');
+  document.getElementById('fl-p1').value='';
+  document.getElementById('fl-p2').value='';
+  document.getElementById('fl-err').textContent='';
+}
+
+function checkFriendPw() {
+  const p1 = document.getElementById('fl-p1').value;
+  const p2 = document.getElementById('fl-p2').value;
+  const err = document.getElementById('fl-err');
+  if(p1 !== state.friendPw || p2 !== state.friendPw) {
+    err.textContent = 'Incorrect friend password.';
+    return;
+  }
+  err.textContent='';
+  showScreen('s-friends');
+  renderFriends();
+}
+
+// ============================================================
+// SCREEN 13 — FRIENDS LIST
+// ============================================================
+function renderFriends() {
+  const cu = state.currentUser;
+  const following = state.users[cu].following || [];
+  const list = document.getElementById('friends-list');
+  document.getElementById('friends-count-badge').textContent = following.length + ' friends';
+
+  if(!following.length) {
+    list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text2)">No friends yet</div>';
+    return;
+  }
+
+  let html = '';
+  for(const peer of following) {
+    const pu = state.users[peer];
+    if(!pu) continue;
+    const col = avatarColor(peer);
+    const avatarHtml = pu.avatar
+      ? `<div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0"><img src="${pu.avatar}" style="width:100%;height:100%;object-fit:cover"/></div>`
+      : `<div class="msg-avatar ${col}" style="width:40px;height:40px;font-size:16px">${avatarLetter(peer)}</div>`;
+    const adminBadge = pu.adminBadge ? '<span class="admin-badge" style="margin-left:6px">★ ADMIN</span>' : '';
+    html += `<div class="friend-row">
+      ${avatarHtml}
+      <div class="friend-row-info">
+        <div class="friend-row-name">${peer}${adminBadge}</div>
+        <div class="friend-row-preview">${pu.email||'No email'}</div>
+      </div>
+      <button class="btn btn-sm btn-accent" onclick="openChat('${peer}')">Chat</button>
+    </div>`;
+  }
+  list.innerHTML = html;
+}
+
+// ============================================================
+// ENTER KEY SUPPORT
+// ============================================================
+['su-username','su-password','su-email'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doSignup();});
+});
+['li-username','li-password'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+});
+['adm-p1','adm-p2'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')checkAdmin();});
+});
+['fl-p1','fl-p2'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')checkFriendPw();});
+});
+
+// Auto-clean expired messages every 30s
+setInterval(()=>{ if(state.chatPeer) cleanExpiredMessages(); }, 30000);
+
+// ============================================================
+// INIT
+// ============================================================
+// If user was logged in, skip to home
+if(state.currentUser && state.users[state.currentUser]) {
+  // Still require security on fresh load
+}
+</script>
+</body>
+</html>
